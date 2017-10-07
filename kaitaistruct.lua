@@ -12,7 +12,7 @@ function KaitaiStruct:close()
 end
 
 function KaitaiStruct:from_file(filename)
-    local inp = assert(io.open(filename), "rb")
+    local inp = assert(io.open(filename, "rb"))
 
     return self(KaitaiStream(inp))
 end
