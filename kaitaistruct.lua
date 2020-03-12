@@ -79,15 +79,15 @@ end
 --.............................................................................
 
 function KaitaiStream:read_s2be()
-    return string.unpack('>h', self._io:read(2))
+    return string.unpack('>i2', self._io:read(2))
 end
 
 function KaitaiStream:read_s4be()
-    return string.unpack('>i', self._io:read(4))
+    return string.unpack('>i4', self._io:read(4))
 end
 
 function KaitaiStream:read_s8be()
-    return string.unpack('>l', self._io:read(8))
+    return string.unpack('>i8', self._io:read(8))
 end
 
 --.............................................................................
@@ -95,15 +95,15 @@ end
 --.............................................................................
 
 function KaitaiStream:read_s2le()
-    return string.unpack('<h', self._io:read(2))
+    return string.unpack('<i2', self._io:read(2))
 end
 
 function KaitaiStream:read_s4le()
-    return string.unpack('<i', self._io:read(4))
+    return string.unpack('<i4', self._io:read(4))
 end
 
 function KaitaiStream:read_s8le()
-    return string.unpack('<l', self._io:read(8))
+    return string.unpack('<i8', self._io:read(8))
 end
 
 -------------------------------------------------------------------------------
@@ -119,15 +119,15 @@ end
 --.............................................................................
 
 function KaitaiStream:read_u2be()
-    return string.unpack('>H', self._io:read(2))
+    return string.unpack('>I2', self._io:read(2))
 end
 
 function KaitaiStream:read_u4be()
-    return string.unpack('>I', self._io:read(4))
+    return string.unpack('>I4', self._io:read(4))
 end
 
 function KaitaiStream:read_u8be()
-    return string.unpack('>L', self._io:read(8))
+    return string.unpack('>I8', self._io:read(8))
 end
 
 --.............................................................................
@@ -135,15 +135,15 @@ end
 --.............................................................................
 
 function KaitaiStream:read_u2le()
-    return string.unpack('<H', self._io:read(2))
+    return string.unpack('<I2', self._io:read(2))
 end
 
 function KaitaiStream:read_u4le()
-    return string.unpack('<I', self._io:read(4))
+    return string.unpack('<I4', self._io:read(4))
 end
 
 function KaitaiStream:read_u8le()
-    return string.unpack('<L', self._io:read(8))
+    return string.unpack('<I8', self._io:read(8))
 end
 
 --=============================================================================
