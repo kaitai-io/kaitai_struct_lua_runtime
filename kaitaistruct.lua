@@ -39,6 +39,9 @@ end
 --=============================================================================
 
 function KaitaiStream:is_eof()
+    if self.bits_left > 0 then
+        return false
+    end
     local current = self._io:seek()
     local dummy = self._io:read(1)
     self._io:seek("set", current)
