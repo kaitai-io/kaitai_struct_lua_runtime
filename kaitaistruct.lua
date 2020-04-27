@@ -186,13 +186,13 @@ function KaitaiStream:align_to_byte()
     self.bits_left = 0
 end
 
-function KaitaiStream:read_bits_int(n)
+function KaitaiStream:read_bits_int_be(n)
     local bits_needed = n - self.bits_left
     if bits_needed > 0 then
         -- 1 bit  => 1 byte
         -- 8 bits => 1 byte
         -- 9 bits => 2 bytes
-        local bytes_needed = math.floor(((bits_needed - 1) / 8) + 1)
+        local bytes_needed = math.ceil(bits_needed / 8)
         local buf = self._io:read(bytes_needed)
         for i = 1, #buf do
             local byte = buf:byte(i)
@@ -211,6 +211,41 @@ function KaitaiStream:read_bits_int(n)
     self.bits_left = self.bits_left - n
     mask = (1 << self.bits_left) - 1
     self.bits = self.bits & mask
+
+    return res
+end
+
+--
+-- Unused since Kaitai Struct Compiler v0.9+ - compatibility with older versions
+--
+-- Deprecated, use read_bits_int_be() instead.
+--
+function KaitaiStream:read_bits_int(n)
+    return self:read_bits_int_be(n)
+end
+
+function KaitaiStream:read_bits_int_le(n)
+    local bits_needed = n - self.bits_left
+    if bits_needed > 0 then
+        -- 1 bit  => 1 byte
+        -- 8 bits => 1 byte
+        -- 9 bits => 2 bytes
+        local bytes_needed = math.ceil(bits_needed / 8)
+        local buf = self._io:read(bytes_needed)
+        for i = 1, #buf do
+            local byte = buf:byte(i)
+            self.bits = self.bits | (byte << self.bits_left)
+            self.bits_left = self.bits_left + 8
+        end
+    end
+
+    -- Raw mask with required number of 1s, starting from lowest bit
+    local mask = (1 << n) - 1
+    -- Derive reading result
+    local res = self.bits & mask
+    -- Remove bottom bits that we've just read by shifting
+    self.bits = self.bits >> n
+    self.bits_left = self.bits_left - n
 
     return res
 end
