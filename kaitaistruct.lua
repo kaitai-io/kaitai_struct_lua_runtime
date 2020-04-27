@@ -204,11 +204,9 @@ function KaitaiStream:read_bits_int(n)
 
     -- Raw mask with required number of 1s, starting from lowest bit
     local mask = (1 << n) - 1
-    -- Shift mask to align with highest bits available in self.bits
+    -- Shift self.bits to align the highest bits with the mask & derive reading result
     local shift_bits = self.bits_left - n
-    mask = mask << shift_bits
-    -- Derive reading result
-    local res = (self.bits & mask) >> shift_bits
+    local res = (self.bits >> shift_bits) & mask
     -- Clear top bits that we've just read => AND with 1s
     self.bits_left = self.bits_left - n
     mask = (1 << self.bits_left) - 1
