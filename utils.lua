@@ -45,4 +45,19 @@ function utils.byte_array_max(str)
     return array_compare(str, function(x, y) return x > y end, bytes_subscript)
 end
 
+-- http://lua-users.org/wiki/TernaryOperator (section Boxing/unboxing, using functions)
+
+local False = {}
+local Nil = {}
+
+function utils.box_wrap(o)
+  return o == nil and Nil or o == false and False or o
+end
+
+function utils.box_unwrap(o)
+  if o == Nil then return nil
+  elseif o == False then return false
+  else return o end
+end
+
 return utils
