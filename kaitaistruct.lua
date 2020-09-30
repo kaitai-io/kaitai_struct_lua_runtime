@@ -4,7 +4,11 @@ local lunpack = require("struct").unpack
 
 local function try_require(name)
     local success, mod = pcall(require, name)
-    if success then return mod else return nil end
+    if success then
+        return mod
+    else
+        return nil
+    end
 end
 
 -- bit is required in translated lua files, so provide it in this parent module
