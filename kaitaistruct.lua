@@ -234,6 +234,10 @@ end
 -- Deprecated, use read_bits_int_be() instead.
 --
 function KaitaiStream:read_bits_int(n)
+    return self:read_bits_int_be(n)
+end
+
+function KaitaiStream:read_bits_int_le(n)
     local bits_needed = n - self.bits_left
     if bits_needed > 0 then
         -- 1 bit  => 1 byte
