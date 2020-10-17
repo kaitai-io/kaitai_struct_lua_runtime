@@ -1,5 +1,18 @@
 local class = require("class")
 local stringstream = require("string_stream")
+local lunpack = require("struct").unpack
+
+local function try_require(name)
+    local success, mod = pcall(require, name)
+    if success then
+        return mod
+    else
+        return nil
+    end
+end
+
+-- bit is required in translated lua files, so provide it in this parent module
+bit = try_require('bit') or try_require('bit32') or error[[no bitwise library found]]
 
 KaitaiStruct = class.class()
 
@@ -74,7 +87,7 @@ end
 -------------------------------------------------------------------------------
 
 function KaitaiStream:read_s1()
-    return string.unpack('b', self._io:read(1))
+    return lunpack('b', self._io:read(1))
 end
 
 --.............................................................................
@@ -82,15 +95,15 @@ end
 --.............................................................................
 
 function KaitaiStream:read_s2be()
-    return string.unpack('>i2', self._io:read(2))
+    return lunpack('>h', self._io:read(2))
 end
 
 function KaitaiStream:read_s4be()
-    return string.unpack('>i4', self._io:read(4))
+    return lunpack('>i', self._io:read(4))
 end
 
 function KaitaiStream:read_s8be()
-    return string.unpack('>i8', self._io:read(8))
+    return lunpack('>l', self._io:read(8))
 end
 
 --.............................................................................
@@ -98,15 +111,15 @@ end
 --.............................................................................
 
 function KaitaiStream:read_s2le()
-    return string.unpack('<i2', self._io:read(2))
+    return lunpack('<h', self._io:read(2))
 end
 
 function KaitaiStream:read_s4le()
-    return string.unpack('<i4', self._io:read(4))
+    return lunpack('<i', self._io:read(4))
 end
 
 function KaitaiStream:read_s8le()
-    return string.unpack('<i8', self._io:read(8))
+    return lunpack('<l', self._io:read(8))
 end
 
 -------------------------------------------------------------------------------
@@ -114,7 +127,7 @@ end
 -------------------------------------------------------------------------------
 
 function KaitaiStream:read_u1()
-    return string.unpack('B', self._io:read(1))
+    return lunpack('B', self._io:read(1))
 end
 
 --.............................................................................
@@ -122,15 +135,15 @@ end
 --.............................................................................
 
 function KaitaiStream:read_u2be()
-    return string.unpack('>I2', self._io:read(2))
+    return lunpack('>H', self._io:read(2))
 end
 
 function KaitaiStream:read_u4be()
-    return string.unpack('>I4', self._io:read(4))
+    return lunpack('>I', self._io:read(4))
 end
 
 function KaitaiStream:read_u8be()
-    return string.unpack('>I8', self._io:read(8))
+    return lunpack('>L', self._io:read(8))
 end
 
 --.............................................................................
@@ -138,15 +151,15 @@ end
 --.............................................................................
 
 function KaitaiStream:read_u2le()
-    return string.unpack('<I2', self._io:read(2))
+    return lunpack('<H', self._io:read(2))
 end
 
 function KaitaiStream:read_u4le()
-    return string.unpack('<I4', self._io:read(4))
+    return lunpack('<I', self._io:read(4))
 end
 
 function KaitaiStream:read_u8le()
-    return string.unpack('<I8', self._io:read(8))
+    return lunpack('<L', self._io:read(8))
 end
 
 --=============================================================================
@@ -158,11 +171,11 @@ end
 -------------------------------------------------------------------------------
 
 function KaitaiStream:read_f4be()
-    return string.unpack('>f', self._io:read(4))
+    return lunpack('>f', self._io:read(4))
 end
 
 function KaitaiStream:read_f8be()
-    return string.unpack('>d', self._io:read(8))
+    return lunpack('>d', self._io:read(8))
 end
 
 -------------------------------------------------------------------------------
@@ -170,11 +183,11 @@ end
 -------------------------------------------------------------------------------
 
 function KaitaiStream:read_f4le()
-    return string.unpack('<f', self._io:read(4))
+    return lunpack('<f', self._io:read(4))
 end
 
 function KaitaiStream:read_f8le()
-    return string.unpack('<d', self._io:read(8))
+    return lunpack('<d', self._io:read(8))
 end
 
 --=============================================================================
@@ -196,21 +209,21 @@ function KaitaiStream:read_bits_int_be(n)
         local buf = self._io:read(bytes_needed)
         for i = 1, #buf do
             local byte = buf:byte(i)
-            self.bits = self.bits << 8
-            self.bits = self.bits | byte
+            self.bits = bit.lshift(self.bits, 8)
+            self.bits = bit.bor(self.bits, byte)
             self.bits_left = self.bits_left + 8
         end
     end
 
     -- Raw mask with required number of 1s, starting from lowest bit
-    local mask = (1 << n) - 1
+    local mask = bit.lshift(1, n) - 1
     -- Shift self.bits to align the highest bits with the mask & derive reading result
     local shift_bits = self.bits_left - n
-    local res = (self.bits >> shift_bits) & mask
+    local res = bit.band(bit.rshift(self.bits, shift_bits), mask)
     -- Clear top bits that we've just read => AND with 1s
     self.bits_left = self.bits_left - n
-    mask = (1 << self.bits_left) - 1
-    self.bits = self.bits & mask
+    mask = bit.lshift(1, self.bits_left) - 1
+    self.bits = bit.band(self.bits, mask)
 
     return res
 end
@@ -234,18 +247,23 @@ function KaitaiStream:read_bits_int_le(n)
         local buf = self._io:read(bytes_needed)
         for i = 1, #buf do
             local byte = buf:byte(i)
-            self.bits = self.bits | (byte << self.bits_left)
+            self.bits = bit.lshift(self.bits, 8)
+            self.bits = bit.bor(self.bits, byte)
             self.bits_left = self.bits_left + 8
         end
     end
 
     -- Raw mask with required number of 1s, starting from lowest bit
-    local mask = (1 << n) - 1
+    local mask = bit.lshift(1, n) - 1
+    -- Shift mask to align with highest bits available in self.bits
+    local shift_bits = self.bits_left - n
+    mask = bit.lshift(mask, shift_bits)
     -- Derive reading result
-    local res = self.bits & mask
-    -- Remove bottom bits that we've just read by shifting
-    self.bits = self.bits >> n
+    local res = bit.rshift(bit.band(self.bits, mask), shift_bits)
+    -- Clear top bits that we've just read => AND with 1s
     self.bits_left = self.bits_left - n
+    mask = bit.lshift(1, self.bits_left) - 1
+    self.bits = bit.band(self.bits, mask)
 
     return res
 end
@@ -348,7 +366,7 @@ function KaitaiStream.process_xor_one(data, key)
     local r = ""
 
     for i = 1, #data do
-        local c = data:byte(i) ~ key
+        local c = bit.bxor(data:byte(i), key)
         r = r .. string.char(c)
     end
 
@@ -361,7 +379,7 @@ function KaitaiStream.process_xor_many(data, key)
     local ki = 1
 
     for i = 1, #data do
-        local c = data:byte(i) ~ key:byte(ki)
+        local c = bit.bxor(data:byte(i), key:byte(ki))
         r = r .. string.char(c)
         ki = ki + 1
         if ki > kl then
@@ -379,11 +397,11 @@ function KaitaiStream.process_rotate_left(data, amount, group_size)
 
     local result = ""
     local mask = group_size * 8 - 1
-    local anti_amount = -amount & mask
+    local anti_amount = bit.band(-amount, mask)
 
     for i = 1, #data  do
         local c = data:byte(i)
-        c = ((c << amount) & 0xFF) | (c >> anti_amount)
+        c = bit.bor(bit.band(bit.lshift(c, amount), 0xFF), bit.rshift(c, anti_amount))
         result = result .. string.char(c)
     end
 
