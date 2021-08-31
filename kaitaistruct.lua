@@ -1,5 +1,6 @@
 local class = require("class")
 local stringstream = require("string_stream")
+local unpack = table.unpack or unpack
 
 KaitaiStruct = class.class()
 
@@ -388,4 +389,87 @@ function KaitaiStream.process_rotate_left(data, amount, group_size)
     end
 
     return result
+end
+
+--=============================================================================
+-- zlib byte array processing
+--=============================================================================
+
+local infl = {}
+
+local lua_version = tonumber(_VERSION:match("^Lua (.*)"))
+if not lua_version or lua_version < 5.3 then
+  -- older version of Lua or Luajit being used - use bit/bit32-based implementation
+  infl = require("inflate_bit32")
+else
+  -- From Lua 5.3, use implementation based on bitwise operators
+  infl = require("inflate_bwo")
+end
+
+local function arraytostr(array)
+  local tmp = {}
+  local size = #array
+  local pos = 1
+  local imax = 1
+  while size > 0 do
+    local bsize = size>=2048 and 2048 or size
+    local s = string.char(unpack(array,pos,pos+bsize-1))
+    pos = pos + bsize
+    size = size - bsize
+    local i = 1
+    while tmp[i] do
+      s = tmp[i]..s
+      tmp[i] = nil
+      i = i + 1
+    end
+    if i > imax then
+      imax = i
+    end
+    tmp[i] = s
+  end
+  local str = ""
+  for i=1,imax do
+    if tmp[i] then
+      str = tmp[i]..str
+    end
+  end
+  return str
+end
+
+-- compute Adler-32 checksum
+local function adler32(s)
+  local s1 = 1
+  local s2 = 0
+  for i=1,#s do
+    local c = s:byte(i)
+    s1 = (s1+c)%65521
+    s2 = (s2+s1)%65521
+  end
+  return s2*65536+s1
+end
+
+function KaitaiStream.process_zlib(data)
+  local bs = infl.bitstream_init(data)
+  local cmf = bs.buf:byte(1)
+  local flg = bs.buf:byte(2)
+  if (cmf*256+flg)%31 ~= 0 then
+    error("zlib header check bits are incorrect")
+  end
+  if infl.band(cmf,15) ~= 8 then
+    error("only deflate format is supported")
+  end
+  if infl.rshift(cmf,4) ~= 7 then
+    error("unsupported window size")
+  end
+  if infl.band(flg,32) ~= 0 then
+    error("preset dictionary not implemented")
+  end
+  bs.pos=3
+  local result = arraytostr(infl.main(bs))
+  local adler = ((bs:getb(8)*256+bs:getb(8))*256+bs:getb(8))*256+bs:getb(8)
+  bs:close()
+  if adler ~= adler32(result) then
+    error("checksum verification failed")
+  end
+  return result
 end
