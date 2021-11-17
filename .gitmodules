@@ -1,0 +1,3 @@
+[submodule "zzlib"]
+	path = zzlib
+	url = https://github.com/zerkman/zzlib
