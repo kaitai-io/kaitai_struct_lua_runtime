@@ -182,34 +182,34 @@ end
 --=============================================================================
 
 function KaitaiStream:align_to_byte()
-    self.bits = 0
     self.bits_left = 0
+    self.bits = 0
 end
 
 function KaitaiStream:read_bits_int_be(n)
+    local res = 0
+
     local bits_needed = n - self.bits_left
+    self.bits_left = -bits_needed % 8
+
     if bits_needed > 0 then
         -- 1 bit  => 1 byte
         -- 8 bits => 1 byte
         -- 9 bits => 2 bytes
         local bytes_needed = math.ceil(bits_needed / 8)
-        local buf = self._io:read(bytes_needed)
-        for i = 1, #buf do
-            local byte = buf:byte(i)
-            self.bits = self.bits << 8
-            self.bits = self.bits | byte
-            self.bits_left = self.bits_left + 8
+        local buf = {self._io:read(bytes_needed):byte(1, bytes_needed)}
+        for i = 1, bytes_needed do
+            res = res << 8 | buf[i]
         end
+
+        local new_bits = res
+        res = res >> self.bits_left | self.bits << bits_needed
+        self.bits = new_bits -- will be masked at the end of the function
+    else
+        res = self.bits >> -bits_needed -- shift unneeded bits out
     end
 
-    -- Raw mask with required number of 1s, starting from lowest bit
-    local mask = (1 << n) - 1
-    -- Shift self.bits to align the highest bits with the mask & derive reading result
-    local shift_bits = self.bits_left - n
-    local res = (self.bits >> shift_bits) & mask
-    -- Clear top bits that we've just read => AND with 1s
-    self.bits_left = self.bits_left - n
-    mask = (1 << self.bits_left) - 1
+    local mask = (1 << self.bits_left) - 1 -- `bits_left` is in range 0..7
     self.bits = self.bits & mask
 
     return res
@@ -225,28 +225,31 @@ function KaitaiStream:read_bits_int(n)
 end
 
 function KaitaiStream:read_bits_int_le(n)
+    local res = 0
     local bits_needed = n - self.bits_left
+
     if bits_needed > 0 then
         -- 1 bit  => 1 byte
         -- 8 bits => 1 byte
         -- 9 bits => 2 bytes
         local bytes_needed = math.ceil(bits_needed / 8)
-        local buf = self._io:read(bytes_needed)
-        for i = 1, #buf do
-            local byte = buf:byte(i)
-            self.bits = self.bits | (byte << self.bits_left)
-            self.bits_left = self.bits_left + 8
+        local buf = {self._io:read(bytes_needed):byte(1, bytes_needed)}
+        for i = 1, bytes_needed do
+            res = res | buf[i] << ((i - 1) * 8) -- NB: Lua uses 1-based indexing, but we need 0-based here
         end
+
+        local new_bits = res >> bits_needed
+        res = res << self.bits_left | self.bits
+        self.bits = new_bits
+    else
+        res = self.bits
+        self.bits = self.bits >> n
     end
 
-    -- Raw mask with required number of 1s, starting from lowest bit
-    local mask = (1 << n) - 1
-    -- Derive reading result
-    local res = self.bits & mask
-    -- Remove bottom bits that we've just read by shifting
-    self.bits = self.bits >> n
-    self.bits_left = self.bits_left - n
+    self.bits_left = -bits_needed % 8
 
+    local mask = (1 << n) - 1 -- unlike some other languages, no problem with this in Lua
+    res = res & mask
     return res
 end
 
