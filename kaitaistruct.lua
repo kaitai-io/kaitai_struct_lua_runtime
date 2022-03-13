@@ -74,7 +74,7 @@ end
 -------------------------------------------------------------------------------
 
 function KaitaiStream:read_s1()
-    return string.unpack('b', self._io:read(1))
+    return string.unpack('b', self:read_bytes(1))
 end
 
 --.............................................................................
@@ -82,15 +82,15 @@ end
 --.............................................................................
 
 function KaitaiStream:read_s2be()
-    return string.unpack('>i2', self._io:read(2))
+    return string.unpack('>i2', self:read_bytes(2))
 end
 
 function KaitaiStream:read_s4be()
-    return string.unpack('>i4', self._io:read(4))
+    return string.unpack('>i4', self:read_bytes(4))
 end
 
 function KaitaiStream:read_s8be()
-    return string.unpack('>i8', self._io:read(8))
+    return string.unpack('>i8', self:read_bytes(8))
 end
 
 --.............................................................................
@@ -98,15 +98,15 @@ end
 --.............................................................................
 
 function KaitaiStream:read_s2le()
-    return string.unpack('<i2', self._io:read(2))
+    return string.unpack('<i2', self:read_bytes(2))
 end
 
 function KaitaiStream:read_s4le()
-    return string.unpack('<i4', self._io:read(4))
+    return string.unpack('<i4', self:read_bytes(4))
 end
 
 function KaitaiStream:read_s8le()
-    return string.unpack('<i8', self._io:read(8))
+    return string.unpack('<i8', self:read_bytes(8))
 end
 
 -------------------------------------------------------------------------------
@@ -114,7 +114,7 @@ end
 -------------------------------------------------------------------------------
 
 function KaitaiStream:read_u1()
-    return string.unpack('B', self._io:read(1))
+    return string.unpack('B', self:read_bytes(1))
 end
 
 --.............................................................................
@@ -122,15 +122,15 @@ end
 --.............................................................................
 
 function KaitaiStream:read_u2be()
-    return string.unpack('>I2', self._io:read(2))
+    return string.unpack('>I2', self:read_bytes(2))
 end
 
 function KaitaiStream:read_u4be()
-    return string.unpack('>I4', self._io:read(4))
+    return string.unpack('>I4', self:read_bytes(4))
 end
 
 function KaitaiStream:read_u8be()
-    return string.unpack('>I8', self._io:read(8))
+    return string.unpack('>I8', self:read_bytes(8))
 end
 
 --.............................................................................
@@ -138,15 +138,15 @@ end
 --.............................................................................
 
 function KaitaiStream:read_u2le()
-    return string.unpack('<I2', self._io:read(2))
+    return string.unpack('<I2', self:read_bytes(2))
 end
 
 function KaitaiStream:read_u4le()
-    return string.unpack('<I4', self._io:read(4))
+    return string.unpack('<I4', self:read_bytes(4))
 end
 
 function KaitaiStream:read_u8le()
-    return string.unpack('<I8', self._io:read(8))
+    return string.unpack('<I8', self:read_bytes(8))
 end
 
 --=============================================================================
@@ -158,11 +158,11 @@ end
 -------------------------------------------------------------------------------
 
 function KaitaiStream:read_f4be()
-    return string.unpack('>f', self._io:read(4))
+    return string.unpack('>f', self:read_bytes(4))
 end
 
 function KaitaiStream:read_f8be()
-    return string.unpack('>d', self._io:read(8))
+    return string.unpack('>d', self:read_bytes(8))
 end
 
 -------------------------------------------------------------------------------
@@ -170,11 +170,11 @@ end
 -------------------------------------------------------------------------------
 
 function KaitaiStream:read_f4le()
-    return string.unpack('<f', self._io:read(4))
+    return string.unpack('<f', self:read_bytes(4))
 end
 
 function KaitaiStream:read_f8le()
-    return string.unpack('<d', self._io:read(8))
+    return string.unpack('<d', self:read_bytes(8))
 end
 
 --=============================================================================
@@ -197,7 +197,7 @@ function KaitaiStream:read_bits_int_be(n)
         -- 8 bits => 1 byte
         -- 9 bits => 2 bytes
         local bytes_needed = math.ceil(bits_needed / 8)
-        local buf = {self._io:read(bytes_needed):byte(1, bytes_needed)}
+        local buf = {self:read_bytes(bytes_needed):byte(1, bytes_needed)}
         for i = 1, bytes_needed do
             res = res << 8 | buf[i]
         end
@@ -233,7 +233,7 @@ function KaitaiStream:read_bits_int_le(n)
         -- 8 bits => 1 byte
         -- 9 bits => 2 bytes
         local bytes_needed = math.ceil(bits_needed / 8)
-        local buf = {self._io:read(bytes_needed):byte(1, bytes_needed)}
+        local buf = {self:read_bytes(bytes_needed):byte(1, bytes_needed)}
         for i = 1, bytes_needed do
             res = res | buf[i] << ((i - 1) * 8) -- NB: Lua uses 1-based indexing, but we need 0-based here
         end
