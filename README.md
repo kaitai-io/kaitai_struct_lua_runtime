@@ -11,6 +11,27 @@ Further reading:
 * [About Kaitai Struct](http://kaitai.io/)
 * [About API implemented in this library](http://doc.kaitai.io/stream_api.html)
 
+## Installation
+
+1. You can clone the runtime library with Git:
+
+   <pre><code>git clone <strong>--recurse-submodules</strong> https://github.com/kaitai-io/kaitai_struct_lua_runtime.git</code></pre>
+
+   If you clone without `--recurse-submodules`, the runtime library will work too, but you'll not be able to parse formats that use `process: zlib` - calling `KaitaiStream.process_zlib` will fail. If you need _zlib_ support but the runtime was cloned without `--recurse-submodules`, run:
+
+   ```bash
+   git submodule update --init --recursive
+   ```
+
+2. Or if you want to add the runtime library to your project as a Git submodule:
+
+   ```bash
+   git submodule add https://github.com/kaitai-io/kaitai_struct_lua_runtime.git [<path>]
+   git submodule update --init --recursive
+   ```
+
+   The second command is only required if you need support for `process: zlib`.
+
 ## Licensing
 
 Copyright 2017-2020 Kaitai Project: MIT license
