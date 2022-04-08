@@ -264,7 +264,7 @@ function KaitaiStream:read_bytes(n)
     end
 
     if r:len() < n then
-        error("requested " .. n .. " bytes, but got only " .. r:len() .. " bytes")
+        error("requested " .. n .. " bytes, but only " .. r:len() .. " bytes available")
     end
 
     return r
