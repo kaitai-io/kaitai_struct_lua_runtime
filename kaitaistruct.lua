@@ -392,3 +392,52 @@ function KaitaiStream.process_rotate_left(data, amount, group_size)
 
     return result
 end
+
+--=============================================================================
+-- zlib byte array processing
+--=============================================================================
+
+local zzlib, zzlib_load_err = (function()
+    local old_pkg_path = package.path
+    local old_pkg_loaded_keys = {}
+
+    local load_err = nil
+
+    -- check that the debug library is available, otherwise we can't resolve the script path
+    if debug ~= nil then
+        for key, _ in pairs(package.loaded) do
+            old_pkg_loaded_keys[key] = true
+        end
+
+        if package.path:sub(1, 1) ~= ";" then
+            package.path = ";" .. package.path
+        end
+        -- Get current script path - combined various suggestions from
+        -- https://stackoverflow.com/a/35072122
+        package.path = (debug.getinfo(2, "S").source:match("^@(.*[/\\])") or "") .. "zzlib/?.lua" .. package.path
+    end
+
+    local success, zzlib = pcall(function() return require("zzlib") end)
+    if not success then
+        load_err = zzlib
+        zzlib = nil
+    end
+
+    if debug ~= nil then
+        package.path = old_pkg_path
+        for key, _ in pairs(package.loaded) do
+            if not old_pkg_loaded_keys[key] then
+                package.loaded[key] = nil
+            end
+        end
+    end
+
+    return zzlib, load_err
+end)()
+
+function KaitaiStream.process_zlib(data)
+    if zzlib == nil then
+        error("can't decompress zlib - failed to load submodule 'zzlib': " .. zzlib_load_err)
+    end
+    return zzlib.inflate(data)
+end
