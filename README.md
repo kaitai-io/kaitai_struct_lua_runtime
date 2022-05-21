@@ -50,6 +50,10 @@ local file_handle=io.open(file_path,'rb')
 local windowsLnkFile=WindowsLnkFile(KaitaiStream(file_handle))
 
 print(windowsLnkFile.work_dir.str)--C:\
+
+file_string_stream:close()
+--or
+--	file_handle:close()
 ```
 
 
