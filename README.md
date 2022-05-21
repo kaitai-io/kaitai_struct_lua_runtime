@@ -32,6 +32,28 @@ Further reading:
 
    The second command is only required if you need support for `process: zlib`.
 
+## Example
+
+```LUA
+require'kaitaistruct'
+assert(KaitaiStruct and KaitaiStream)
+--	following parsing library contains these global variables too
+
+require'windows_lnk_file'
+--	Lua parsing library of target source files (.ksy)
+--	example from [File Format Gallery for Kaitai Struct](https://formats.kaitai.io/)
+assert(WindowsLnkFile and KaitaiStruct and KaitaiStream)
+	
+local file_path=[[C:\test.lnk]]
+local file_handle=io.open(file_path,'rb')
+--	must not read / seek `file_handle` manually, use internal
+local windowsLnkFile=WindowsLnkFile(KaitaiStream(file_handle))
+
+print(windowsLnkFile.work_dir.str)--C:\
+```
+
+
+
 ## Licensing
 
 Copyright 2017-2020 Kaitai Project: MIT license
