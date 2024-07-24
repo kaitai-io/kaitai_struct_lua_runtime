@@ -288,23 +288,60 @@ function KaitaiStream:read_bytes_term(term, include_term, consume_term, eos_erro
         if c == nil then
             if eos_error then
                 error("end of stream reached, but no terminator " .. term .. " found")
-            else
-                return r
             end
-        elseif c:byte() == term then
+
+            return r
+        end
+
+        if c:byte() == term then
             if include_term then
                 r = r .. c
             end
 
             if not consume_term then
-                local current = self._io:seek()
-                self._io:seek("set", current - 1)
+                self._io:seek("cur", -1)
             end
 
             return r
-        else
-            r = r .. c
         end
+
+        r = r .. c
+    end
+end
+
+function KaitaiStream:read_bytes_term_multi(term, include_term, consume_term, eos_error)
+    local unit_size = #term
+    local r = ""
+
+    while true do
+        local c = self._io:read(unit_size)
+
+        if c == nil then
+            c = ""
+        end
+
+        if #c < unit_size then
+            if eos_error then
+                error("end of stream reached, but no terminator " .. term .. " found")
+            end
+
+            r = r .. c
+            return r
+        end
+
+        if c == term then
+            if include_term then
+                r = r .. c
+            end
+
+            if not consume_term then
+                self._io:seek("cur", -unit_size)
+            end
+
+            return r
+        end
+
+        r = r .. c
     end
 end
 
@@ -341,6 +378,21 @@ function KaitaiStream.bytes_terminate(src, term, include_term)
     end
 
     return src:sub(1, new_len - 1)
+end
+
+function KaitaiStream.bytes_terminate_multi(src, term, include_term)
+    local unit_size = #term
+
+    for i = 1, #src, unit_size do
+        if src:sub(i, i + unit_size - 1) == term then
+            if include_term then
+                i = i + unit_size
+            end
+            return src:sub(1, i - 1)
+        end
+    end
+
+    return src
 end
 
 --=============================================================================
