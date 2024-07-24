@@ -17,7 +17,7 @@ function StringStream:close()
 end
 
 function StringStream:seek(whence, offset)
-    local len = self._buf:len()
+    local len = #self._buf
     whence = whence or "cur"
 
     if whence == "set" then
@@ -40,7 +40,7 @@ function StringStream:seek(whence, offset)
 end
 
 function StringStream:read(num)
-    local len = self._buf:len()
+    local len = #self._buf
 
     if num == "*all" then
         if self._pos == len then
@@ -57,7 +57,7 @@ function StringStream:read(num)
 
     local ret = self._buf:sub(self._pos + 1, self._pos + num)
 
-    if ret:len() == 0 then
+    if #ret == 0 then
         return nil
     end
 

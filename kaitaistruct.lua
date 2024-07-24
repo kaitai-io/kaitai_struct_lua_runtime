@@ -263,8 +263,8 @@ function KaitaiStream:read_bytes(n)
         r = ""
     end
 
-    if r:len() < n then
-        error("requested " .. n .. " bytes, but only " .. r:len() .. " bytes available")
+    if #r < n then
+        error("requested " .. n .. " bytes, but only " .. #r .. " bytes available")
     end
 
     return r
@@ -319,7 +319,7 @@ function KaitaiStream:ensure_fixed_contents(expected)
 end
 
 function KaitaiStream.bytes_strip_right(src, pad_byte)
-    local new_len = src:len()
+    local new_len = #src
 
     while new_len >= 1 and src:byte(new_len) == pad_byte do
         new_len = new_len - 1
@@ -330,7 +330,7 @@ end
 
 function KaitaiStream.bytes_terminate(src, term, include_term)
     local new_len = 1
-    local max_len = src:len()
+    local max_len = #src
 
     while new_len <= max_len and src:byte(new_len) ~= term do
         new_len = new_len + 1
@@ -360,7 +360,7 @@ end
 
 function KaitaiStream.process_xor_many(data, key)
     local r = ""
-    local kl = key:len()
+    local kl = #key
     local ki = 1
 
     for i = 1, #data do
