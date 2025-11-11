@@ -50,6 +50,7 @@ function KaitaiStream:is_eof()
 end
 
 function KaitaiStream:seek(n)
+    self:align_to_byte()
     self._io:seek("set", n)
 end
 
@@ -197,7 +198,7 @@ function KaitaiStream:read_bits_int_be(n)
         -- 8 bits => 1 byte
         -- 9 bits => 2 bytes
         local bytes_needed = math.ceil(bits_needed / 8)
-        local buf = {self:read_bytes(bytes_needed):byte(1, bytes_needed)}
+        local buf = {self:_read_bytes_not_aligned(bytes_needed):byte(1, bytes_needed)}
         for i = 1, bytes_needed do
             res = res << 8 | buf[i]
         end
@@ -233,7 +234,7 @@ function KaitaiStream:read_bits_int_le(n)
         -- 8 bits => 1 byte
         -- 9 bits => 2 bytes
         local bytes_needed = math.ceil(bits_needed / 8)
-        local buf = {self:read_bytes(bytes_needed):byte(1, bytes_needed)}
+        local buf = {self:_read_bytes_not_aligned(bytes_needed):byte(1, bytes_needed)}
         for i = 1, bytes_needed do
             res = res | buf[i] << ((i - 1) * 8) -- NB: Lua uses 1-based indexing, but we need 0-based here
         end
@@ -258,6 +259,11 @@ end
 --=============================================================================
 
 function KaitaiStream:read_bytes(n)
+    self:align_to_byte()
+    return self:_read_bytes_not_aligned(n)
+end
+
+function KaitaiStream:_read_bytes_not_aligned(n)
     local r = self._io:read(n)
     if r == nil then
         r = ""
@@ -271,6 +277,7 @@ function KaitaiStream:read_bytes(n)
 end
 
 function KaitaiStream:read_bytes_full()
+    self:align_to_byte()
     local r = self._io:read("*all")
     if r == nil then
         r = ""
@@ -280,6 +287,7 @@ function KaitaiStream:read_bytes_full()
 end
 
 function KaitaiStream:read_bytes_term(term, include_term, consume_term, eos_error)
+    self:align_to_byte()
     local r = ""
 
     while true do
@@ -310,6 +318,7 @@ function KaitaiStream:read_bytes_term(term, include_term, consume_term, eos_erro
 end
 
 function KaitaiStream:read_bytes_term_multi(term, include_term, consume_term, eos_error)
+    self:align_to_byte()
     local unit_size = #term
     local r = ""
 
