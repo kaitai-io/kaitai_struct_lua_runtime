@@ -3,7 +3,7 @@
 -- Inspired by https://gist.github.com/MikuAuahDark/e6428ac49248dd436f67c6c64fcec604
 --
 
-local class = require("class")
+local class = require("kaitaistruct.class")
 
 local StringStream = class.class()
 
