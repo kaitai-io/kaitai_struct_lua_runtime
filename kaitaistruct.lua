@@ -395,7 +395,7 @@ function KaitaiStream.bytes_terminate_multi(src, term, include_term)
     for i = 1, #src, unit_size do
         if src:sub(i, i + unit_size - 1) == term then
             if include_term then
-                i = i + unit_size
+                local i = i + unit_size
             end
             return src:sub(1, i - 1)
         end
