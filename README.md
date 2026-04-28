@@ -15,7 +15,9 @@ Further reading:
 
 1. You can clone the runtime library with Git:
 
-   <pre><code>git clone <strong>--recurse-submodules</strong> https://github.com/kaitai-io/kaitai_struct_lua_runtime.git</code></pre>
+   ```bash
+   git clone --recurse-submodules https://github.com/kaitai-io/kaitai_struct_lua_runtime.git
+   ```
 
    If you clone without `--recurse-submodules`, the runtime library will work too, but you'll not be able to parse formats that use `process: zlib` - calling `KaitaiStream.process_zlib` will fail. If you need _zlib_ support but the runtime was cloned without `--recurse-submodules`, run:
 
