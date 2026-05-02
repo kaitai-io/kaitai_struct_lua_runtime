@@ -17,10 +17,12 @@ function enum.Enum(t)
     end
 
     return setmetatable(e, {
+        -- Returns an enums instance by a variant name
         __index = function(table, key)
             return rawget(table._enums, key)
         end,
 
+        -- Creates an enum instance from the value
         __call = function(table, value)
             for k, v in pairs(table._enums) do
                 if v.value == value then
@@ -28,7 +30,7 @@ function enum.Enum(t)
                 end
             end
 
-            return nil
+            return value
         end,
 
         __eq = function(lhs, rhs)
