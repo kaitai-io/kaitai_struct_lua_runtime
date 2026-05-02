@@ -17,12 +17,13 @@ function enum.Enum(t)
     end
 
     return setmetatable(e, {
-        -- Returns an enums instance by a variant name
+        -- Retrieve an enum entry by its string label
         __index = function(table, key)
             return rawget(table._enums, key)
         end,
 
-        -- Creates an enum instance from the value
+        -- Retrieve an enum entry by integer value, or return the raw value if
+        -- it wasn't found in the enum
         __call = function(table, value)
             for k, v in pairs(table._enums) do
                 if v.value == value then
