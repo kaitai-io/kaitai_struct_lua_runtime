@@ -46,4 +46,16 @@ function enum.Enum(t)
     })
 end
 
+function enum.is_defined(v)
+    return type(v) == "table"
+end
+
+function enum.to_int(v)
+    if type(v) == "table" then
+        return v.value
+    else
+        return v
+    end
+end
+
 return enum
