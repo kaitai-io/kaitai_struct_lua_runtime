@@ -17,10 +17,13 @@ function enum.Enum(t)
     end
 
     return setmetatable(e, {
+        -- Retrieve an enum entry by its string label
         __index = function(table, key)
             return rawget(table._enums, key)
         end,
 
+        -- Retrieve an enum entry by integer value, or return the raw value if
+        -- it wasn't found in the enum
         __call = function(table, value)
             for k, v in pairs(table._enums) do
                 if v.value == value then
@@ -28,7 +31,7 @@ function enum.Enum(t)
                 end
             end
 
-            return nil
+            return value
         end,
 
         __eq = function(lhs, rhs)
