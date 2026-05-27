@@ -1,5 +1,9 @@
 local class = require("class")
 local stringstream = require("string_stream")
+string.unpack = string.unpack or function (char, ...)
+    char = char:gsub('i4', 'i'):gsub('i2', 'h'):gsub('i8', 'l'):gsub('I4', 'I'):gsub('I2', 'H'):gsub('I8', 'L')
+    return require("struct").unpack(char, ...)
+end
 
 KaitaiStruct = class.class()
 
