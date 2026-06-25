@@ -1,7 +1,7 @@
 local class = require("class")
 local stringstream = require("string_stream")
 
-KaitaiStruct = class.class()
+local KaitaiStruct = class.class()
 
 function KaitaiStruct:_init(io)
     self._io = io
@@ -23,7 +23,7 @@ function KaitaiStruct:from_string(s)
     return self(KaitaiStream(ss))
 end
 
-KaitaiStream = class.class()
+local KaitaiStream = class.class()
 
 function KaitaiStream:_init(io)
     self._io = io
@@ -502,3 +502,5 @@ function KaitaiStream.process_zlib(data)
     end
     return zzlib.inflate(data)
 end
+
+return {KaitaiStruct, KaitaiStream}
